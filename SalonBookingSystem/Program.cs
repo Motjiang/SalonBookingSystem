@@ -2,11 +2,16 @@ using Mailjet.Client.Resources;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SalonBookingSystem.Data;
 using SalonBookingSystem.Models;
 using SalonBookingSystem.Services;
+using SalonBookingSystem.System_Communication;
+using SalonBookingSystem.System_Communication.Hubs;
+using SalonBookingSystem.System_Communication.Implementation;
+using SalonBookingSystem.System_Communication.Interfaces;
 using System.Text;
 using System.Threading.RateLimiting;
 
@@ -19,6 +24,8 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 // Add Cors
 builder.Services.AddCors();
+// Add SignalR
+builder.Services.AddSignalR();
 // Add DB Context
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
@@ -29,6 +36,12 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<JWTService>();
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<AppDataSeed>();
+
+// Add Appointment Notification Service
+builder.Services.AddScoped<IAppointmentNotificationService, AppointmentNotificationService>();
+
+// Add Provider for SignalR to identify users based on JWT
+builder.Services.AddSingleton<IUserIdProvider, Provider>();
 
 // defining our IdentityCore Service
 builder.Services.AddIdentityCore<ApplicationUser>(options =>
@@ -133,6 +146,9 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Map SignalR hubs
+app.MapHub<AppointmentHub>("/hubs/appointments");
 
 #region AppDataSeed
 using var scope = app.Services.CreateScope();
