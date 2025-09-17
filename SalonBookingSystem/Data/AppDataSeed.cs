@@ -31,7 +31,7 @@ namespace SalonBookingSystem.Data
             {
                 await _roleManager.CreateAsync(new IdentityRole(Constants.AdminRole));
                 await _roleManager.CreateAsync(new IdentityRole(Constants.StaffRole));
-                await _roleManager.CreateAsync(new IdentityRole(Constants.ClienRole));
+                await _roleManager.CreateAsync(new IdentityRole(Constants.ClientRole));
             }
 
             if (!_userManager.Users.AnyAsync().GetAwaiter().GetResult())

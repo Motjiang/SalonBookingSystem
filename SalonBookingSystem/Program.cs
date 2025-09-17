@@ -85,12 +85,21 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 // Add Rate Limiting
 builder.Services.AddRateLimiter(options =>
 {
+    // Fixed window for all public account endpoints
+    options.AddFixedWindowLimiter(policyName: "account_crud", options =>
+    {
+        options.Window = TimeSpan.FromSeconds(30); 
+        options.PermitLimit = 3;                    
+        options.QueueLimit = 0;
+        options.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+    });
+
     // Sliding window for public GET endpoints
     options.AddSlidingWindowLimiter(policyName:"public_get", options =>
     {
         options.Window = TimeSpan.FromSeconds(10);
-        options.PermitLimit = 3;       // max 3 requests per window
-        options.SegmentsPerWindow = 2; // divide window into 2 segments
+        options.PermitLimit = 3;       
+        options.SegmentsPerWindow = 2; 
         options.QueueLimit = 0;
         options.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
     });
@@ -99,7 +108,7 @@ builder.Services.AddRateLimiter(options =>
     options.AddFixedWindowLimiter(policyName:"admin_crud", options =>
     {
         options.Window = TimeSpan.FromSeconds(30);
-        options.PermitLimit = 2;  // only 2 admin actions per 30 seconds
+        options.PermitLimit = 2;  
         options.QueueLimit = 0;
         options.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
     });

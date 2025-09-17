@@ -5,7 +5,7 @@
         // Designations
         public const string AdminRole = "Admin";
         public const string StaffRole = "Staff";
-        public const string ClienRole = "Client";
+        public const string ClientRole = "Client";
 
         // Default User names
         public const string AdminUserName = "admin@example.com";
