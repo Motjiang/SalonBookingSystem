@@ -69,8 +69,8 @@ namespace SalonBookingSystem.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            if (await _userManager.FindByEmailAsync(dto.Email.ToLower()) != null)
-                return BadRequest($"An account with email {dto.Email} already exists.");
+            if(CheckEmailExistsAsync(dto.Email).GetAwaiter().GetResult())
+                return Conflict($"An account with email '{dto.Email}' already exists.");
 
             // Create client entity
             var client = new Client
@@ -190,7 +190,7 @@ namespace SalonBookingSystem.Controllers
             if (user.EmailConfirmed) return BadRequest("Email already confirmed");
 
             if (await SendConfirmEMailAsync(user))
-                return Ok(new { title = "Confirmation link sent", message = "Please confirm your email address" });
+                return Ok(new { title = "Confirmation link sent", message = "Please confirm your email address." });
 
             return BadRequest("Failed to send email. Please contact admin");
         }
@@ -209,9 +209,9 @@ namespace SalonBookingSystem.Controllers
             if (!user.EmailConfirmed) return BadRequest("Please confirm your email first.");
 
             if (await SendForgotPasswordEmail(user))
-                return Ok(new { title = "Forgot username or password email sent", message = "Please check your email" });
+                return Ok(new { title = "Forgot password email sent", message = "Please check your (Spam) emails." });
 
-            return BadRequest("Failed to send email. Please contact admin");
+            return BadRequest("Failed to send email. Please contact admin.");
         }
 
         /// <summary>

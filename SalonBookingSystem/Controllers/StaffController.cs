@@ -50,6 +50,7 @@ namespace SalonBookingSystem.Controllers
                     var query = from s in _context.Staff
                                 join u in _userManager.Users
                                 on s.StaffID equals u.StaffID
+                                where u.IsActive
                                 select new
                                 {
                                     s.StaffID,
@@ -116,17 +117,26 @@ namespace SalonBookingSystem.Controllers
         {
             try
             {
-                var staff = await _context.Staff.FindAsync(id);
+                var staff = await _context.Staff
+                 .Join(_context.Users,
+                     s => s.StaffID,
+                     u => u.StaffID,
+                     (s, u) => new { Staff = s, User = u })
+                 .Where(x => x.Staff.StaffID == id && x.User.IsActive)
+                 .Select(x => x.Staff)
+                 .FirstOrDefaultAsync();
+
                 if (staff == null)
-                    return NotFound(new { Message = "Staff not found." });
+                    return NotFound(new { Message = "Active staff not found." });
 
                 return Ok(staff);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(500, new { Message = "Error fetching staff." });
+                return StatusCode(500, new { Message = "Error fetching staff.", Details = ex.Message });
             }
         }
+
         #endregion
 
         #region POST: api/staff
@@ -313,22 +323,34 @@ namespace SalonBookingSystem.Controllers
         {
             try
             {
+                // Find staff by id
                 var staff = await _context.Staff.FindAsync(id);
                 if (staff == null)
                     return NotFound(new { Message = "Staff not found." });
 
-                _context.Staff.Remove(staff);
+                // Get related ApplicationUser
+                var user = await _userManager.Users.FirstOrDefaultAsync(u => u.StaffID == staff.StaffID);
+                if (user == null)
+                    return NotFound(new { Message = "Associated user not found." });
+
+                // Soft delete → just mark as inactive
+                user.IsActive = false;
+                _context.Users.Update(user);
+
+                // Save changes
                 await _context.SaveChangesAsync();
 
+                // If you have cache invalidation logic
                 RemoveStaffCache();
 
-                return Ok(new { Message = "Staff deleted successfully." });
+                return NoContent();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(500, new { Message = "Error deleting staff."});
+                return StatusCode(500, new { Message = "Error deleting staff.", Details = ex.Message });
             }
         }
+
         #endregion
 
         #region Private Methods

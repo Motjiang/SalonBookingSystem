@@ -202,7 +202,7 @@ namespace SalonBookingSystem.Controllers
                 // Remove cache for all pages
                 RemoveServiceCache();
 
-                return Ok(new { Message = "Service deleted successfully." });
+                return NoContent();
             }
             catch (Exception ex)
             {
