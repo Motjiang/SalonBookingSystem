@@ -33,11 +33,11 @@ namespace SalonBookingSystem.Controllers
                 if (!ModelState.IsValid)
                     return BadRequest(ModelState);
 
-                // ✅ prevent booking in the past
+                //  prevent booking in the past
                 if (appointmentDto.StartTime < DateTime.Now)
                     return BadRequest(new { Message = "Cannot book an appointment in the past." });
 
-                // ✅ restrict business hours
+                //  restrict business hours
                 var startHour = appointmentDto.StartTime.TimeOfDay;
                 var dayOfWeek = appointmentDto.StartTime.DayOfWeek;
 
@@ -62,12 +62,12 @@ namespace SalonBookingSystem.Controllers
                 if (!isValidTime)
                     return BadRequest(new { Message = "Appointments must be within business hours: Mon-Fri 08:00-17:00, Sat 08:00-13:00." });
 
-                // ✅ get logged-in user's Identity Id (string)
+                //  get logged-in user's Identity Id (string)
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 if (string.IsNullOrEmpty(userId))
                     return Unauthorized(new { Message = "User not logged in." });
 
-                // ✅ join ApplicationUser and Client to find the client record
+                //  join ApplicationUser and Client to find the client record
                 var client = await (from c in _context.Clients
                                     join u in _context.Users
                                     on c.ClientID equals u.ClientID
@@ -78,7 +78,7 @@ namespace SalonBookingSystem.Controllers
                 if (client == null)
                     return Unauthorized(new { Message = "Client not found or inactive." });
 
-                // ✅ check if staff is available
+                //  check if staff is available
                 bool isBooked = await IsStaffBookedAsync(
                     appointmentDto.StaffID,
                     appointmentDto.StartTime,
@@ -99,10 +99,10 @@ namespace SalonBookingSystem.Controllers
                     });
                 }
 
-                // ✅ map DTO to entity
+                // map DTO to entity
                 var appointment = new Appointment
                 {
-                    ClientID = client.ClientID,  // int PK from Client table
+                    ClientID = client.ClientID,  
                     StaffID = appointmentDto.StaffID,
                     ServiceID = appointmentDto.ServiceID,
                     StartTime = appointmentDto.StartTime,
@@ -110,7 +110,6 @@ namespace SalonBookingSystem.Controllers
                     Status = "Scheduled"
                 };
 
-                // Save appointment
                 _context.Appointments.Add(appointment);
                 await _context.SaveChangesAsync();
 
@@ -137,11 +136,11 @@ namespace SalonBookingSystem.Controllers
                 if (appointment == null)
                     return NotFound(new { Message = "Appointment not found" });
 
-                // ✅ prevent updating to a past time
+                // prevent updating to a past time
                 if (updatedAppointmentDto.StartTime < DateTime.Now)
                     return BadRequest(new { Message = "Cannot set appointment in the past." });
 
-                // ✅ check business hours
+                // check business hours
                 var startHour = updatedAppointmentDto.StartTime.TimeOfDay;
                 var dayOfWeek = updatedAppointmentDto.StartTime.DayOfWeek;
                 bool isValidTime = false;
@@ -156,7 +155,7 @@ namespace SalonBookingSystem.Controllers
                 if (!isValidTime)
                     return BadRequest(new { Message = "Appointment time must be within business hours." });
 
-                // ✅ check if staff is available for the new time, excluding current appointment
+                // Check if staff is available for the new time, excluding current appointment
                 bool isBooked = await IsStaffBookedAsync(
                     updatedAppointmentDto.StaffID,
                     updatedAppointmentDto.StartTime,
@@ -177,7 +176,7 @@ namespace SalonBookingSystem.Controllers
                     });
                 }
 
-                // ✅ map DTO to entity
+                // map DTO to entity
                 appointment.StartTime = updatedAppointmentDto.StartTime;
                 appointment.EndTime = updatedAppointmentDto.EndTime;
                 appointment.ServiceID = updatedAppointmentDto.ServiceID;
@@ -230,22 +229,20 @@ namespace SalonBookingSystem.Controllers
         }
         #endregion
 
-
         #region Private Methods
         private async Task<bool> IsStaffBookedAsync(int staffId, DateTime start, DateTime end, int? excludeAppointmentId = null)
         {
             return await _context.Appointments.AnyAsync(a =>
                 a.StaffID == staffId &&
                 a.Status == "Scheduled" &&
-                (excludeAppointmentId == null || a.AppointmentID != excludeAppointmentId) && // ✅ exclude current appointment if updating
+                (excludeAppointmentId == null || a.AppointmentID != excludeAppointmentId) && 
                 (
-                    (start >= a.StartTime && start < a.EndTime) ||    // new start inside existing
-                    (end > a.StartTime && end <= a.EndTime) ||        // new end inside existing
-                    (start <= a.StartTime && end >= a.EndTime)        // new covers existing
+                    (start >= a.StartTime && start < a.EndTime) ||    
+                    (end > a.StartTime && end <= a.EndTime) ||       
+                    (start <= a.StartTime && end >= a.EndTime)       
                 )
             );
         }
-
         #endregion
     }
 }
