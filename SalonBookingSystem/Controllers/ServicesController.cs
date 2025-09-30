@@ -31,7 +31,7 @@ namespace SalonBookingSystem.Controllers
         /// </summary>
         [HttpGet("get-all-services")]
         [EnableRateLimiting("public_get")]
-        public async Task<IActionResult> GetServices(string? search = null,int page = 1,int pageSize = 10)
+        public async Task<IActionResult> GetServices(string? search = "",int page = 1,int pageSize = 10)
         {
             try
             {
