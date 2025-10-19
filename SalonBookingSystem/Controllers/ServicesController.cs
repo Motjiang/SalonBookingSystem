@@ -30,7 +30,7 @@ namespace SalonBookingSystem.Controllers
         /// Caches results per page + search term
         /// </summary>
         [HttpGet("get-all-services")]
-        [EnableRateLimiting("public_get")]
+        [EnableRateLimiting("public_get")] // rate limiting policy
         public async Task<IActionResult> GetServices(string? search = "",int page = 1,int pageSize = 10)
         {
             try
